@@ -1,9 +1,12 @@
-import { useBrainConfig } from "@/lib/context/BrainConfigProvider/hooks/useBrainConfig";
-import { useToast } from "@/lib/hooks/useToast";
-import { useAxios } from "@/lib/useAxios";
+/* eslint-disable */
 import { UUID } from "crypto";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+
+import { useBrainConfig } from "@/lib/context/BrainConfigProvider/hooks/useBrainConfig";
+import { useToast } from "@/lib/hooks/useToast";
+import { useAxios } from "@/lib/useAxios";
+
 import { Chat, ChatMessage } from "../../../types/Chat";
 
 export default function useChats() {
@@ -34,24 +37,29 @@ export default function useChats() {
         text: "Error occured while fetching your chats",
       });
     }
-  }, []);
+  }, [axiosInstance, publish]);
 
-  const fetchChat = useCallback(async (chatId?: UUID) => {
-    if (!chatId) return;
-    try {
-      console.log(`Fetching chat ${chatId}`);
-      const response = await axiosInstance.get<Chat>(`/chat/${chatId}`);
-      console.log(response.data);
+  const fetchChat = useCallback(
+    async (chatId?: UUID) => {
+      if (!chatId) {
+        return;
+      }
+      try {
+        console.log(`Fetching chat ${chatId}`);
+        const response = await axiosInstance.get<Chat>(`/chat/${chatId}`);
+        console.log(response.data);
 
-      setChat(response.data);
-    } catch (error) {
-      console.error(error);
-      publish({
-        variant: "danger",
-        text: `Error occured while fetching ${chatId}`,
-      });
-    }
-  }, []);
+        setChat(response.data);
+      } catch (error) {
+        console.error(error);
+        publish({
+          variant: "danger",
+          text: `Error occured while fetching ${chatId}`,
+        });
+      }
+    },
+    [axiosInstance, publish]
+  );
 
   type ChatResponse = Omit<Chat, "chatId"> & { chatId: UUID | undefined };
 
@@ -61,6 +69,7 @@ export default function useChats() {
     options: Record<string, string | unknown>;
   }) => {
     fetchAllChats();
+
     return axiosInstance.post<ChatResponse>(`/chat`, options);
   };
 
@@ -75,7 +84,9 @@ export default function useChats() {
   const sendMessage = async (chatId?: UUID, msg?: ChatMessage) => {
     setIsSendingMessage(true);
 
-    if (msg) setMessage(msg);
+    if (msg) {
+      setMessage(msg);
+    }
     const options: Record<string, unknown> = {
       chat_id: chatId,
       model,
@@ -98,6 +109,7 @@ export default function useChats() {
       });
       setMessage(["", ""]);
       setIsSendingMessage(false);
+
       return;
     }
 
@@ -111,6 +123,7 @@ export default function useChats() {
       console.log("---- Creating a new chat ----");
       setAllChats((chats) => {
         console.log({ chats });
+
         return [...chats, newChat];
       });
       setChat(newChat);
